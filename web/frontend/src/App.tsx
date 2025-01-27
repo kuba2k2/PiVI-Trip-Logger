@@ -3,7 +3,7 @@
  */
 
 import React from "react"
-import { BrowserRouter, Route, Switch } from "react-router-dom"
+import { BrowserRouter, Route, Switch, useParams } from "react-router-dom"
 import { LinkContainer } from "react-router-bootstrap"
 
 import "./App.css"
@@ -18,6 +18,7 @@ import {
 } from "react-bootstrap"
 import NavbarToggle from "react-bootstrap/NavbarToggle"
 import NavbarCollapse from "react-bootstrap/NavbarCollapse"
+import TripPage from "./pages/TripPage"
 
 const App: React.FC = () => (
 	<BrowserRouter>
@@ -43,10 +44,18 @@ const App: React.FC = () => (
 		</Navbar>
 		<Container>
 			<Switch>
-				<Route path="/trips">
+				<Route exact path="/">
+					{/*<Home />*/}
+				</Route>
+				<Route exact path="/trips">
 					<TripsPage />
 				</Route>
-				<Route path="/">{/*<Home />*/}</Route>
+				<Route
+					path="/trips/:id"
+					render={(props) => (
+						<TripPage tripId={parseInt(props.match.params.id)} />
+					)}
+				></Route>
 			</Switch>
 		</Container>
 	</BrowserRouter>

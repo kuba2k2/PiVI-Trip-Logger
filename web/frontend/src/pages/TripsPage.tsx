@@ -9,6 +9,8 @@ import moment, { duration, Duration } from "moment"
 import "moment/dist/locale/pl"
 import "moment/locale/pl"
 import StatCard from "../components/StatCard"
+import { LinkContainer } from "react-router-bootstrap"
+import { Link } from "react-router-dom"
 
 type TripsPageState = {
 	trips?: Trip[]
@@ -120,17 +122,45 @@ export default class TripsPage extends React.Component<any, TripsPageState> {
 						{this.state.trips.map((trip) => (
 							<tr>
 								<td className={largeDown}>
-									{trip.startTime.format("LL")}
+									{trip.tripId ? (
+										<Link to={`/trips/${trip.tripId}`}>
+											{trip.startTime.format("LL")}
+										</Link>
+									) : (
+										<span>
+											{trip.startTime.format("LL")}
+										</span>
+									)}
 								</td>
 								<td className={xlargeUp}>
-									{trip.startTime.format("dddd, LL")}
+									{trip.tripId ? (
+										<Link to={`/trips/${trip.tripId}`}>
+											{trip.startTime.format("dddd, LL")}
+										</Link>
+									) : (
+										<span>
+											{trip.startTime.format("dddd, LL")}
+										</span>
+									)}
 								</td>
 								<td>
-									{trip.startTime.format("HH:mm")}
-									{" - "}
-									{trip.tripId
-										? trip.endTime.format("HH:mm")
-										: "(teraz)"}
+									{trip.tripId ? (
+										<Link to={`/trips/${trip.tripId}`}>
+											{trip.startTime.format("HH:mm")}
+											{" - "}
+											{trip.tripId
+												? trip.endTime.format("HH:mm")
+												: "(teraz)"}
+										</Link>
+									) : (
+										<span>
+											{trip.startTime.format("HH:mm")}
+											{" - "}
+											{trip.tripId
+												? trip.endTime.format("HH:mm")
+												: "(teraz)"}
+										</span>
+									)}
 								</td>
 								<td>{trip.dist.toFixed(2)} km</td>
 								<td className={largeUp}>
