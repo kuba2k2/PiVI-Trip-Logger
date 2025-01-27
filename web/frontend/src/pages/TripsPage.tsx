@@ -3,7 +3,7 @@
  */
 
 import React from "react"
-import { Table } from "react-bootstrap"
+import { PageItem, Pagination, Table } from "react-bootstrap"
 import { mapToTrip, Trip } from "../model/Trip"
 import moment from "moment"
 import "moment/dist/locale/pl"
@@ -12,20 +12,19 @@ import "moment/locale/pl"
 type TripsPageState = {
 	trips?: Trip[]
 	error?: string
+	before?: number
+	prevBefore: (number | undefined)[]
 }
 
 export default class TripsPage extends React.Component<any, TripsPageState> {
 	constructor(props: any) {
 		super(props)
-		this.state = {}
-	}
-
-	componentDidMount() {
-		this.loadData()
+		this.state = { prevBefore: [] }
 	}
 
 	render() {
-		if (!this.state.trips)
+		if (!this.state.trips) {
+			if (!this.state.error) this.loadData()
 			return (
 				<div>
 					<h2 className="my-3">Ostatnie trasy</h2>
@@ -33,6 +32,7 @@ export default class TripsPage extends React.Component<any, TripsPageState> {
 					{!this.state.error && <p>Loading...</p>}
 				</div>
 			)
+		}
 
 		moment.locale("pl")
 
@@ -107,12 +107,52 @@ export default class TripsPage extends React.Component<any, TripsPageState> {
 						))}
 					</tbody>
 				</Table>
+				<Pagination>
+					<PageItem
+						disabled={this.state.prevBefore.length == 0}
+						onClick={this.onPagePrevClick.bind(this)}
+					>
+						&laquo; Następne
+					</PageItem>
+					<PageItem
+						disabled={this.state.trips.length != 20}
+						onClick={this.onPageNextClick.bind(this)}
+					>
+						Poprzednie &raquo;
+					</PageItem>
+				</Pagination>
 			</div>
 		)
 	}
 
+	onPagePrevClick() {
+		if (!this.state.trips) return
+		const newBefore = this.state.prevBefore.pop()
+		this.setState({
+			trips: undefined,
+			before: newBefore,
+			prevBefore: Array.of(...this.state.prevBefore),
+		})
+	}
+
+	onPageNextClick() {
+		if (!this.state.trips?.length) return
+		const newBefore = Math.min(
+			...this.state.trips.map((trip) =>
+				parseInt(trip.startTime.format("x"))
+			)
+		)
+		this.setState({
+			trips: undefined,
+			before: newBefore,
+			prevBefore: Array.of(...this.state.prevBefore, this.state.before),
+		})
+	}
+
 	async loadData() {
-		const response = await fetch("/api/trips")
+		let url = "/api/trips"
+		if (this.state.before) url += `?before=${this.state.before}`
+		const response = await fetch(url)
 		const tripList: any[] = await response.json()
 		const trips: Trip[] = tripList.map(mapToTrip)
 		this.setState({ trips })
