@@ -4,7 +4,6 @@ from sqlmodel import Field, SQLModel
 
 
 class TripBase(SQLModel):
-    trip_id: int = Field(primary_key=True)
     time: int
     dist: int
     fuel: int
@@ -34,4 +33,8 @@ class TripBase(SQLModel):
 
 
 class Trip(TripBase, table=True):
-    pass
+    trip_id: int = Field(primary_key=True)
+
+
+class TripNoId(TripBase):
+    trip_id: int | None

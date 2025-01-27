@@ -5,7 +5,7 @@
 import moment, { duration, Duration, Moment } from "moment"
 
 export type Trip = {
-	tripId: number
+	tripId: number | null
 	time: Duration
 	dist: number // kilometers
 	fuel: number // liters

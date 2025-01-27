@@ -5,11 +5,11 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sqlmodel import Session, create_engine, select
+from sqlmodel import Session, create_engine, select, func
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .model.record import Record
-from .model.trip import Trip
+from .model.trip import Trip, TripNoId
 
 sqlite_file_name = "canlogger.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
@@ -55,13 +55,59 @@ async def get_record_list(
     return session.exec(stmt.limit(limit)).all()
 
 
-@app.get("/api/trips", response_model=list[Trip])
+@app.get("/api/trips", response_model=list[TripNoId])
 async def get_trip_list(
     session: SessionDep,
     after: int = None,
     before: int = None,
     limit: Annotated[int, Query(le=100)] = 20,
 ):
+    current_trip = []
+    if after is None and before is None:
+        # noinspection PyArgumentList
+        stmt = (
+            select(
+                Record.trip_id,
+                func.sum(Record.end_time - Record.start_time).label("time"),
+                func.sum(Record.dist).label("dist"),
+                func.sum(Record.fuel).label("fuel"),
+                func.min(Record.start_time).label("start_time"),
+                func.max(Record.end_time).label("end_time"),
+                func.min(Record.start_mileage).label("start_mileage"),
+                func.max(Record.end_mileage).label("end_mileage"),
+                func.max(Record.engine_speed_max).label("engine_speed_max"),
+                func.max(Record.vehicle_speed_max).label("vehicle_speed_max"),
+                (func.sum(Record.coolant_temp) / func.count(Record.coolant_temp)).label(
+                    "coolant_temp_avg"
+                ),
+                func.min(Record.coolant_temp).label("coolant_temp_min"),
+                func.max(Record.coolant_temp).label("coolant_temp_max"),
+                (func.sum(Record.outside_temp) / func.count(Record.outside_temp)).label(
+                    "outside_temp_avg"
+                ),
+                func.min(Record.outside_temp).label("outside_temp_min"),
+                func.max(Record.outside_temp).label("outside_temp_max"),
+                (func.sum(Record.oil_temp) / func.count(Record.oil_temp)).label(
+                    "oil_temp_avg"
+                ),
+                func.min(Record.oil_temp).label("oil_temp_min"),
+                func.max(Record.oil_temp).label("oil_temp_max"),
+                func.min(Record.oil_level).label("oil_level_min"),
+                func.max(Record.oil_level).label("oil_level_max"),
+                func.min(Record.fuel_level).label("fuel_level_min"),
+                func.max(Record.fuel_level).label("fuel_level_max"),
+                func.min(Record.fuel_range).label("fuel_range_min"),
+                func.max(Record.fuel_range).label("fuel_range_max"),
+                func.min(Record.fuel_cons_min).label("fuel_cons_min"),
+                func.max(Record.fuel_cons_max).label("fuel_cons_max"),
+            )
+            .where(Record.trip_id.is_(None))
+            .group_by(Record.trip_id)
+        )
+        trip = session.exec(stmt.limit(1)).first()
+        if trip:
+            current_trip = [trip]
+            limit -= 1
     stmt = select(Trip)
     order_by = Trip.start_time.desc()
     if after is not None:
@@ -70,7 +116,7 @@ async def get_trip_list(
     if before is not None:
         stmt = stmt.where(Trip.end_time < before)
     stmt = stmt.order_by(order_by)
-    return session.exec(stmt.limit(limit)).all()
+    return current_trip + session.exec(stmt.limit(limit)).all()
 
 
 @app.get("/api/trips/{trip_id}", response_model=Trip)

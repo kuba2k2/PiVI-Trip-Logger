@@ -36,9 +36,10 @@ export default class TripsPage extends React.Component<any, TripsPageState> {
 
 		moment.locale("pl")
 
-		const hideOnMedium = "d-none d-lg-table-cell"
-		const hideOnSmall = "d-none d-md-table-cell"
-		const showOnMedium = "d-xs-none d-md-table-cell d-lg-none"
+		const largeUp = "d-none d-lg-table-cell"
+		const mediumUp = "d-none d-md-table-cell"
+		const xlargeUp = "d-none d-xl-table-cell"
+		const largeDown = "d-xl-none"
 		return (
 			<div>
 				<h2 className="my-3">Ostatnie trasy</h2>
@@ -48,55 +49,58 @@ export default class TripsPage extends React.Component<any, TripsPageState> {
 							<th>Data</th>
 							<th>Godzina</th>
 							<th>Dystans</th>
-							<th className={hideOnMedium}>Czas jazdy</th>
-							<th className={hideOnMedium}>Paliwo</th>
-							<th className={hideOnSmall}>Śr. prędkość</th>
-							<th className={hideOnSmall}>Śr. spalanie</th>
-							<th className={hideOnMedium}>Max. prędkość</th>
-							<th className={hideOnMedium}>Temperatura</th>
+							<th className={largeUp}>Czas jazdy</th>
+							<th className={largeUp}>Paliwo</th>
+							<th className={mediumUp}>Śr. prędkość</th>
+							<th className={mediumUp}>Śr. spalanie</th>
+							<th className={largeUp}>Max. prędkość</th>
+							<th className={largeUp}>Temperatura</th>
 						</tr>
 					</thead>
 					<tbody>
 						{this.state.trips.map((trip) => (
 							<tr>
-								<td className={showOnMedium}>
+								<td className={largeDown}>
 									{trip.startTime.format("LL")}
 								</td>
-								<td className={hideOnMedium}>
+								<td className={xlargeUp}>
 									{trip.startTime.format("dddd, LL")}
 								</td>
 								<td>
-									{trip.startTime.format("HH:mm")} -{" "}
-									{trip.endTime.format("HH:mm")}
+									{trip.startTime.format("HH:mm")}
+									{" - "}
+									{trip.tripId
+										? trip.endTime.format("HH:mm")
+										: "(teraz)"}
 								</td>
 								<td>{trip.dist.toFixed(2)} km</td>
-								<td className={hideOnMedium}>
-									{(trip.time.hours() &&
-										`${trip.time.hours()} h`) ||
-										""}{" "}
-									{(trip.time.minutes() &&
-										`${trip.time.minutes()} min`) ||
-										""}
+								<td className={largeUp}>
+									{trip.time.hours()
+										? `${trip.time.hours()} h`
+										: ""}{" "}
+									{trip.time.minutes()
+										? `${trip.time.minutes()} min`
+										: ""}
 								</td>
-								<td className={hideOnMedium}>
+								<td className={largeUp}>
 									{trip.fuel.toFixed(2)} l
 								</td>
-								<td className={hideOnSmall}>
+								<td className={mediumUp}>
 									{(trip.dist / trip.time.asHours()).toFixed(
 										1
 									)}{" "}
 									km/h
 								</td>
-								<td className={hideOnSmall}>
+								<td className={mediumUp}>
 									{((trip.fuel / trip.dist) * 100.0).toFixed(
 										1
 									)}{" "}
 									l/100 km
 								</td>
-								<td className={hideOnMedium}>
+								<td className={largeUp}>
 									{trip.vehicleSpeedMax.toFixed(1)} km/h
 								</td>
-								<td className={hideOnMedium}>
+								<td className={largeUp}>
 									{trip.outsideTempAvg.toFixed(1)}°C
 								</td>
 							</tr>
