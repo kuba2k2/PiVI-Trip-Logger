@@ -592,3 +592,5 @@ sketch
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/c,c++,node,cmake,react,python,clion+all,intellij+all,visualstudiocode,git
+
+package-lock.json
