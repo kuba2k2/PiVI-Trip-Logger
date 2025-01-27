@@ -154,7 +154,7 @@ export default class TripPage extends React.Component<
 								record.endTime.diff(record.startTime)
 							).asHours()
 					),
-					borderColor: "rgb(255, 99, 132)",
+					borderColor: "#D664BE",
 					backgroundColor: "transparent",
 					yAxisID: "ySpeed",
 				},
@@ -163,7 +163,7 @@ export default class TripPage extends React.Component<
 					data: this.state.records.map(
 						(record) => (record.fuel / record.dist) * 100.0
 					),
-					borderColor: "rgb(53, 162, 235)",
+					borderColor: "#FEB95F",
 					backgroundColor: "transparent",
 					yAxisID: "yFuel",
 				},
@@ -207,12 +207,23 @@ export default class TripPage extends React.Component<
 						title="Paliwo"
 						value={trip.fuel.toFixed(2) + " l"}
 					/>
+					<div style={{ clear: "both" }}></div>
 					<StatCard
 						title="Śr. prędkość"
 						value={
 							(trip.dist / trip.time.asHours()).toFixed(1) +
 							" km/h"
 						}
+						min={Math.min(
+							...this.state.records.map(
+								(record) => record.vehicleSpeedMin
+							)
+						).toFixed(1)}
+						max={Math.max(
+							...this.state.records.map(
+								(record) => record.vehicleSpeedMax
+							)
+						).toFixed(1)}
 					/>
 					<StatCard
 						title="Śr. spalanie"
@@ -220,6 +231,58 @@ export default class TripPage extends React.Component<
 							((trip.fuel / trip.dist) * 100.0).toFixed(2) +
 							" l/100 km"
 						}
+						min={Math.min(
+							...this.state.records.map(
+								(record) => record.fuelConsMin
+							)
+						).toFixed(1)}
+						max={Math.max(
+							...this.state.records.map(
+								(record) => record.fuelConsMax
+							)
+						).toFixed(1)}
+					/>
+					<StatCard
+						title="Temp. otoczenia"
+						value={
+							(
+								this.state.records.reduce(
+									(sum, record) => sum + record.outsideTemp,
+									0
+								) / this.state.records.length
+							).toFixed(1) + "°C"
+						}
+						min={Math.min(
+							...this.state.records.map(
+								(record) => record.outsideTemp
+							)
+						).toFixed(1)}
+						max={Math.max(
+							...this.state.records.map(
+								(record) => record.outsideTemp
+							)
+						).toFixed(1)}
+					/>
+					<StatCard
+						title="Temp. silnika"
+						value={
+							(
+								this.state.records.reduce(
+									(sum, record) => sum + record.coolantTemp,
+									0
+								) / this.state.records.length
+							).toFixed(1) + "°C"
+						}
+						min={Math.min(
+							...this.state.records.map(
+								(record) => record.coolantTemp
+							)
+						).toFixed(1)}
+						max={Math.max(
+							...this.state.records.map(
+								(record) => record.coolantTemp
+							)
+						).toFixed(1)}
 					/>
 				</div>
 
