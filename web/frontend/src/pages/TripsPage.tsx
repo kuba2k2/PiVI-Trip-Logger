@@ -3,13 +3,12 @@
  */
 
 import React from "react"
-import { Card, PageItem, Pagination, Table } from "react-bootstrap"
+import { PageItem, Pagination, Table } from "react-bootstrap"
 import { mapToTrip, Trip } from "../model/Trip"
-import moment, { duration, Duration } from "moment"
+import moment, { duration } from "moment"
 import "moment/dist/locale/pl"
 import "moment/locale/pl"
 import StatCard from "../components/StatCard"
-import { LinkContainer } from "react-router-bootstrap"
 import { Link } from "react-router-dom"
 
 type TripsPageState = {

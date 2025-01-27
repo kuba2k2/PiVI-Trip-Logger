@@ -3,7 +3,7 @@
  */
 
 import React from "react"
-import { BrowserRouter, Route, Switch, useParams } from "react-router-dom"
+import { BrowserRouter, Route, Switch } from "react-router-dom"
 import { LinkContainer } from "react-router-bootstrap"
 
 import "./App.css"

@@ -5,12 +5,17 @@
 import React from "react"
 import { mapToTrip, Trip } from "../model/Trip"
 import { mapToRecord, Record } from "../model/Record"
-import moment, { duration, Duration } from "moment"
+import moment, { duration } from "moment"
 import "moment/dist/locale/pl"
 import "moment/locale/pl"
 import { Button } from "react-bootstrap"
 import { LinkContainer } from "react-router-bootstrap"
 import StatCard from "../components/StatCard"
+import { Line } from "react-chartjs-2"
+import { Chart, ChartData, ChartOptions } from "chart.js"
+
+// @ts-ignore
+import zoomPlugin from "chartjs-plugin-zoom"
 
 type TripPageProps = {
 	tripId: number
@@ -23,6 +28,8 @@ type TripPageState = {
 	before?: number
 	prevBefore: (number | undefined)[]
 }
+
+Chart.register(zoomPlugin)
 
 export default class TripPage extends React.Component<
 	TripPageProps,
@@ -56,7 +63,114 @@ export default class TripPage extends React.Component<
 		moment.locale("pl")
 
 		const trip = this.state.trip
-		this.state.records.sort((a, b) => b.startTime.diff(a.startTime))
+		this.state.records.sort((a, b) => a.startTime.diff(b.startTime))
+
+		const chartOptions: ChartOptions<"line"> = {
+			responsive: true,
+			scales: {
+				x: {
+					type: "linear",
+					position: "bottom",
+					offset: false,
+					title: {
+						display: true,
+						text: "Czas",
+					},
+					ticks: {
+						callback: function (value: string | number) {
+							return moment(value).format("HH:mm")
+						},
+					},
+					grid: {
+						drawOnChartArea: false,
+					},
+				},
+				ySpeed: {
+					type: "linear",
+					position: "left",
+					title: {
+						display: true,
+						text: "Prędkość (km/h)",
+					},
+					ticks: {
+						callback: function (value: number | string) {
+							return value + " km/h"
+						},
+					},
+					grid: {
+						drawOnChartArea: false,
+					},
+				},
+				yFuel: {
+					type: "linear",
+					position: "right",
+					title: {
+						display: true,
+						text: "Spalanie (l/100 km)",
+					},
+					ticks: {
+						callback: function (value: number | string) {
+							return value + " l/100 km"
+						},
+					},
+					grid: {
+						drawOnChartArea: false,
+					},
+				},
+			},
+			plugins: {
+				zoom: {
+					zoom: {
+						wheel: {
+							enabled: true,
+						},
+						drag: {
+							enabled: false,
+						},
+						pinch: {
+							enabled: true,
+						},
+						mode: "x",
+					},
+					pan: {
+						enabled: true,
+						mode: "x",
+					},
+				},
+			},
+		}
+
+		const labels = this.state.records.map((record) => record.startTime)
+
+		const chartData: ChartData<"line"> = {
+			labels,
+			datasets: [
+				{
+					label: "Prędkość",
+					data: this.state.records.map(
+						(record) =>
+							record.dist /
+							duration(
+								record.endTime.diff(record.startTime)
+							).asHours()
+					),
+					borderColor: "rgb(255, 99, 132)",
+					backgroundColor: "transparent",
+					yAxisID: "ySpeed",
+				},
+				{
+					label: "Spalanie",
+					data: this.state.records.map(
+						(record) => (record.fuel / record.dist) * 100.0
+					),
+					borderColor: "rgb(53, 162, 235)",
+					backgroundColor: "transparent",
+					yAxisID: "yFuel",
+				},
+			],
+		}
+
+		const chart = <Line options={chartOptions} data={chartData} />
 
 		return (
 			<div>
@@ -103,6 +217,8 @@ export default class TripPage extends React.Component<
 						}
 					/>
 				</div>
+
+				{chart}
 			</div>
 		)
 	}
@@ -140,8 +256,8 @@ export default class TripPage extends React.Component<
 	}
 
 	async loadRecords() {
-		let url = `/api/records?trip_id=${this.props.tripId}`
-		if (this.state.before) url += `?before=${this.state.before}`
+		let url = `/api/records?trip_id=${this.props.tripId}&limit=100`
+		if (this.state.before) url += `&before=${this.state.before}`
 		const response = await fetch(url)
 		const recordList: any[] = await response.json()
 		const records: Record[] = recordList.map(mapToRecord)
