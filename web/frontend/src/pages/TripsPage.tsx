@@ -3,11 +3,12 @@
  */
 
 import React from "react"
-import { PageItem, Pagination, Table } from "react-bootstrap"
+import { Card, PageItem, Pagination, Table } from "react-bootstrap"
 import { mapToTrip, Trip } from "../model/Trip"
-import moment from "moment"
+import moment, { duration, Duration } from "moment"
 import "moment/dist/locale/pl"
 import "moment/locale/pl"
+import StatCard from "../components/StatCard"
 
 type TripsPageState = {
 	trips?: Trip[]
@@ -27,14 +28,15 @@ export default class TripsPage extends React.Component<any, TripsPageState> {
 			if (!this.state.error) this.loadData()
 			return (
 				<div>
-					<h2 className="my-3">Ostatnie trasy</h2>
-					{this.state.error && <p>Error: {this.state.error}</p>}
-					{!this.state.error && <p>Loading...</p>}
+					{this.state.error && <p>Błąd: {this.state.error}</p>}
+					{!this.state.error && <p>Ładowanie...</p>}
 				</div>
 			)
 		}
 
 		moment.locale("pl")
+
+		this.state.trips.sort((a, b) => b.startTime.diff(a.startTime))
 
 		const largeUp = "d-none d-lg-table-cell"
 		const mediumUp = "d-none d-md-table-cell"
@@ -42,6 +44,63 @@ export default class TripsPage extends React.Component<any, TripsPageState> {
 		const largeDown = "d-xl-none"
 		return (
 			<div>
+				<h2 className="mt-3 mb-0">Podsumowanie</h2>
+				<small className="m-0">
+					{this.state.trips[
+						this.state.trips.length - 1
+					].startTime.format("LL")}
+					{" - "}
+					{this.state.trips[0].startTime.format("LL")}
+				</small>
+				<div className="mt-3">
+					<StatCard
+						title="Dystans"
+						value={
+							this.state.trips
+								.reduce((sum, trip) => sum + trip.dist, 0)
+								.toFixed(2) + " km"
+						}
+					/>
+					<StatCard
+						title="Czas jazdy"
+						value={this.state.trips
+							.map((trip) => trip.time)
+							.reduce((sum, value) => sum.add(value), duration(0))
+							.humanize()}
+					/>
+					<StatCard
+						title="Paliwo"
+						value={
+							this.state.trips
+								.reduce((sum, trip) => sum + trip.fuel, 0)
+								.toFixed(2) + " l"
+						}
+					/>
+					<StatCard
+						title="Śr. prędkość"
+						value={
+							(
+								this.state.trips.reduce(
+									(sum, trip) =>
+										sum + trip.dist / trip.time.asHours(),
+									0
+								) / this.state.trips.length
+							).toFixed(1) + " km/h"
+						}
+					/>
+					<StatCard
+						title="Śr. spalanie"
+						value={
+							(
+								this.state.trips.reduce(
+									(sum, trip) =>
+										sum + (trip.fuel / trip.dist) * 100.0,
+									0
+								) / this.state.trips.length
+							).toFixed(2) + " l/100 km"
+						}
+					/>
+				</div>
 				<h2 className="my-3">Ostatnie trasy</h2>
 				<Table responsive={true} striped={true} variant="sm">
 					<thead>
@@ -93,7 +152,7 @@ export default class TripsPage extends React.Component<any, TripsPageState> {
 								</td>
 								<td className={mediumUp}>
 									{((trip.fuel / trip.dist) * 100.0).toFixed(
-										1
+										2
 									)}{" "}
 									l/100 km
 								</td>
