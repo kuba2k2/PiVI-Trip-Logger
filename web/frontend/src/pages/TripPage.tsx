@@ -8,7 +8,7 @@ import { mapToRecord, Record } from "../model/Record"
 import moment, { duration } from "moment"
 import "moment/dist/locale/pl"
 import "moment/locale/pl"
-import { Button } from "react-bootstrap"
+import { Button, PageItem, Pagination, Table } from "react-bootstrap"
 import { LinkContainer } from "react-router-bootstrap"
 import StatCard from "../components/StatCard"
 import { Line } from "react-chartjs-2"
@@ -172,6 +172,11 @@ export default class TripPage extends React.Component<
 
 		const chart = <Line options={chartOptions} data={chartData} />
 
+		this.state.records.sort((a, b) => b.startTime.diff(a.startTime))
+
+		const largeUp = "d-none d-lg-table-cell"
+		const mediumUp = "d-none d-md-table-cell"
+		const smallText = "d-none d-lg-inline-block text-muted"
 		return (
 			<div>
 				<LinkContainer to="/trips">
@@ -219,6 +224,89 @@ export default class TripPage extends React.Component<
 				</div>
 
 				{chart}
+
+				<h2 className="my-3">Odcinki trasy</h2>
+				<Table responsive={true} striped={true} variant="sm">
+					<thead>
+						<tr>
+							<th>Godzina</th>
+							<th>Dystans</th>
+							<th className={largeUp}>Paliwo (poziom)</th>
+							<th>
+								Prędkość{" "}
+								<small className={smallText}>(min/max)</small>
+							</th>
+							<th>
+								Spalanie{" "}
+								<small className={smallText}>(min/max)</small>
+							</th>
+							<th className={mediumUp}>Temperatura</th>
+							<th className={largeUp}>Temp. silnika</th>
+							<th className={largeUp}>Zasięg</th>
+						</tr>
+					</thead>
+					<tbody>
+						{this.state.records.map((record) => (
+							<tr>
+								<td>{record.startTime.format("HH:mm")}</td>
+								<td>{record.dist.toFixed(2)} km</td>
+								<td className={largeUp}>
+									{record.fuel.toFixed(2)} l (
+									{record.fuelLevel.toFixed(0)}%)
+								</td>
+								<td>
+									{(
+										record.dist /
+										duration(
+											record.endTime.diff(
+												record.startTime
+											)
+										).asHours()
+									).toFixed(1)}{" "}
+									km/h{" "}
+									<small className={smallText}>
+										({record.vehicleSpeedMin.toFixed(1)} /{" "}
+										{record.vehicleSpeedMax.toFixed(1)})
+									</small>
+								</td>
+								<td>
+									{(
+										(record.fuel / record.dist) *
+										100.0
+									).toFixed(2)}{" "}
+									l/100 km{" "}
+									<small className={smallText}>
+										({record.fuelConsMin.toFixed(1)} /{" "}
+										{record.fuelConsMax.toFixed(1)})
+									</small>
+								</td>
+								<td className={mediumUp}>
+									{record.outsideTemp.toFixed(1)}°C
+								</td>
+								<td className={largeUp}>
+									{record.coolantTemp.toFixed(1)}°C
+								</td>
+								<td className={largeUp}>
+									{record.fuelRange.toFixed(0)} km
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</Table>
+				<Pagination>
+					<PageItem
+						disabled={this.state.prevBefore.length == 0}
+						onClick={this.onPagePrevClick.bind(this)}
+					>
+						&laquo; Następne
+					</PageItem>
+					<PageItem
+						disabled={this.state.records.length != 100}
+						onClick={this.onPageNextClick.bind(this)}
+					>
+						Poprzednie &raquo;
+					</PageItem>
+				</Pagination>
 			</div>
 		)
 	}
